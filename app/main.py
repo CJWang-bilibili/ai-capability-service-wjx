@@ -194,10 +194,24 @@ async def chat(req: ChatRequest):
             status_code=429,
             content={"ok": False, "error": "请求频率超限，请稍后重试", "message": "", "model": "", "usage": {}},
         )
+    except anthropic.BadRequestError as exc:
+        # Extract the human-readable message from the error body
+        try:
+            msg = exc.body.get("error", {}).get("message", str(exc))  # type: ignore[union-attr]
+        except Exception:
+            msg = str(exc)
+        return JSONResponse(
+            status_code=400,
+            content={"ok": False, "error": msg, "message": "", "model": "", "usage": {}},
+        )
     except anthropic.APIStatusError as exc:
+        try:
+            msg = exc.body.get("error", {}).get("message", exc.message)  # type: ignore[union-attr]
+        except Exception:
+            msg = exc.message
         return JSONResponse(
             status_code=502,
-            content={"ok": False, "error": f"上游 API 错误: {exc.message}", "message": "", "model": "", "usage": {}},
+            content={"ok": False, "error": f"API 错误: {msg}", "message": "", "model": "", "usage": {}},
         )
 
     text = next((block.text for block in message.content if block.type == "text"), "")
