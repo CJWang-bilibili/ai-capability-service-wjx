@@ -12,6 +12,26 @@ class CapabilityRequest(BaseModel):
     request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
 
 
+class ChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+
+class ChatRequest(BaseModel):
+    api_key: str = ""
+    model: str = "claude-sonnet-4-6"
+    system: str = "You are a helpful assistant."
+    messages: list[ChatMessage]
+
+
+class ChatResponse(BaseModel):
+    ok: bool
+    message: str = ""
+    model: str = ""
+    usage: dict[str, int] = Field(default_factory=dict)
+    error: str = ""
+
+
 class Meta(BaseModel):
     request_id: str
     capability: str
